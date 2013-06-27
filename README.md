@@ -13,6 +13,8 @@ To make it easier to test and use, two links have also been included that will d
 provide the service of generating test CSV data. 
 These sites are:  http://http://www.mockaroo.com/ and http://www.generatedata.com/.
 
+* There is currently no CSV validation, the script expects CSV data with the same column count in each record.
+
 The scripts used in this example consist of:
 
 jQuery - http://jquery.com/
