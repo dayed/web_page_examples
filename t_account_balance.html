@@ -1,0 +1,492 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+
+<html lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<title>T-Account</title>
+
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.1/jquery-ui.min.js"></script>
+
+<script type="text/javascript">
+  $(document).ready(function() {
+        var db_total = 0;
+        var cr_total = 0;
+        var bd_row;
+        var cf_row;    
+        var in_sequence = 0;
+
+        //Create table dynamically
+        create_table();
+
+        $("#btnopen").click(function() {
+            $(".empty_row").show();          
+            $(".bd_line").remove();
+            $(".cf_line").remove();          
+            $(".right.total").text("");
+            $(".left.total").text("");                    
+        });               
+
+      $("#btnmantran").click(function() {
+
+          //Validation
+          var test_result = "";
+
+          if($('#leftacc').val()){
+          test_result = test_result + "1";
+          } else {
+          test_result = test_result + "0";
+          }
+          //Test if left amount is present and numeric
+          if( ($('#leftamnt').val()) && ($('#leftamnt').val() == parseInt($('#leftamnt').val()) ) ){
+              test_result = test_result + "1";
+          } else {
+          test_result = test_result + "0";
+          }
+          if($('#rightacc').val()){
+          test_result = test_result + "1";
+          } else {
+          test_result = test_result + "0";
+          }
+          //Test if right amount is present and numeric
+          if( ($('#rightamnt').val()) && ($('#rightamnt').val() == parseInt($('#rightamnt').val()) ) ){
+              test_result = test_result + "1";
+          } else {
+          test_result = test_result + "0";
+          }
+
+
+
+          if(test_result == "1100" || test_result == "0011"){
+              if(!in_sequence){
+
+                  var leftacc = $("#leftacc").val()
+                  var leftamnt = $("#leftamnt").val()
+                  var rightacc = $("#rightacc").val()
+                  var rightamnt = $("#rightamnt").val()
+                   //Add new transaction
+                  var row = '<tr class="tran_line">' +
+                            '<td class="left acc_name">' + leftacc + '</td>' +
+                            '<td class="left acc_amnt">' + leftamnt + '</td>' +
+                            '<td class="right acc_name">' + rightacc + '</td>' +
+                            '<td class="right acc_amnt">' + rightamnt + '</td>' +
+                            '</tr>'
+                  $(".empty_row").before(row);  
+
+                  //Reset text fields
+                  $("input:text").val("");
+
+                } else {
+                    alert("Sequence must finish before adding any new transactions");
+                } 
+          } else {
+          alert("Make sure that:\n" +
+                  "1. Values are entered into either the left two fields or right two fields\n" +
+                  "2. Amount entered is numeric");
+          }
+
+        });
+
+      $("#btnaddtran").click(function() {
+        var pick_side = Math.floor(Math.random() * 10)
+
+        if(!in_sequence){
+             //Pick left or right side randomnly and then insert a transaction
+              if(pick_side%2){
+                  var row = '<tr class="tran_line">' +
+                            '<td class="left acc_name"></td>' +
+                            '<td class="left acc_amnt"></td>' +
+                            '<td class="right acc_name">Account Name</td>' +
+                            '<td class="right acc_amnt">' + Math.floor(Math.random() * 6000) + '</td>' +
+                            '</tr>'
+              } else {
+                  var row = '<tr class="tran_line">' +
+                            '<td class="left acc_name">Account Name</td>' +
+                            '<td class="left acc_amnt">' + Math.floor(Math.random() * 6000) + '</td>' +
+                            '<td class="right acc_name"></td>' +
+                            '<td class="right acc_amnt"></td>' +
+                            '</tr>'          
+              }
+              $(".empty_row").before(row);
+          } else {
+            alert("Sequence must finish before adding any new transactions");
+          }
+
+        });
+ 
+        $("#btntotal").click(function() {
+          total();
+          $(".left.total").text(db_total); 
+          $(".right.total").text(cr_total);  
+        });
+
+        $("#btnclose").click(function() {
+            var time = 2000;
+            total();
+            close_account();          
+
+            $(".tran_total").fadeOut(time, function() {
+                   $(".empty_row").hide();
+
+                   //Balancing Totals
+                   if(db_total>cr_total){
+                      $(".right.total").text(db_total);
+                   } else if(db_total<cr_total){
+                      $(".left.total").text(cr_total);
+                   }
+
+                  //Populating Brought Down & Carried forward fields
+                  $(".tran_line:last").after(bd_row);
+                  $(".bd_line").hide();
+                  $(".tran_total").after(cf_row);
+                  $(".cf_line").hide();                  
+                  
+                  //Promise makes sure the callback is only called once 
+                  $(".tran_total,.bd_line").fadeIn(time).promise().done(function() {                                  
+                    $(".cf_line").fadeIn(time);
+                  });
+            });
+        });        
+
+        var seq_cnt = 1;
+        $("#btnsequence").click(function() {
+        time = 500;
+        steps = 4;
+
+        if($(".tran_line").length){
+
+          switch(seq_cnt){
+              case(1): console.log(seq_cnt);
+                        //Totalling both sides
+                        in_sequence = 1;
+                        total();
+                        
+                        //Show total line 
+                        $(".tran_total").fadeIn(time);                         
+                        
+                        $(".left.total").text(db_total); 
+                        $(".right.total").text(cr_total);  
+                        var desc = "<p>Step " + seq_cnt + " of " + steps + "</p>"
+                        $("#tran_desc").html(desc);
+                       seq_cnt++;
+                       break;
+
+              case(2): console.log(seq_cnt);
+                        //Populating Brought Down figure
+                        close_account();
+                        $(".empty_row").hide();                        
+                        $(".tran_line:last").after(bd_row);
+
+                        $(".bd_line").hide();
+                        $(".bd_line").fadeIn(time);  
+
+                        if(db_total>cr_total){
+                          var larger = $(".left.total").text();
+                          var smaller = $(".right.total").text();
+                        } else if(db_total<cr_total){
+                          var larger = $(".right.total").text();
+                          var smaller = $(".left.total").text();
+                        }
+                        var sum = larger - smaller;
+                        var desc = "<p>Step " + seq_cnt + " of " + steps + "</p>"
+                        $("#tran_desc").html(desc);                        
+                       seq_cnt++;
+                       break;
+
+              case(3): console.log(seq_cnt);
+                        //Rebalancing Totals
+                        total();   
+           
+                        $(".tran_total").fadeOut(time, function() {                                  
+                            $(".right.total").text(db_total);
+                            $(".left.total").text(cr_total);
+                                          });
+                        
+                        $(".tran_total").fadeIn(time);
+                        var desc = "<p>Step " + seq_cnt + " of " + steps + "</p>"
+                        $("#tran_desc").html(desc);
+                       seq_cnt++;
+                       break;
+
+              case(4): console.log(seq_cnt);
+                        //Populating Carried Forward figure
+                        $(".tran_total").after(cf_row);
+                        $(".cf_line").hide();
+                        $(".cf_line").fadeIn(time);
+                        var desc = "<p>Step " + seq_cnt + " of " + steps + "</p>"
+                        $("#tran_desc").html(desc);                        
+                       seq_cnt++;
+                       break;
+
+              case(5): console.log(seq_cnt);
+                        //Reset to start state
+                        $(".empty_row").show();          
+                        $(".bd_line").remove();
+                        $(".cf_line").remove();          
+                        $(".right.total").text("");
+                        $(".left.total").text(""); 
+                        var desc = "<p> </p>"
+                        $("#tran_desc").html(desc);  
+                        
+                        //Hide total line 
+                        $(".tran_total").hide();
+                        $("#btnreset").trigger('click');                                          
+                       
+                       seq_cnt = 1;
+                       in_sequence = 0;
+                       break;                       
+
+              default: console.log("default");
+                       break;                                                                     
+          }
+        } else {
+          alert("No transactions");
+        }
+        });
+
+      $("#btnreset").click(function() {
+          in_sequence = 0;
+          seq_cnt = 1;
+
+          //Hide total line 
+          $("#transactions").html("");
+          $("#tran_desc").html("");          
+          create_table();                      
+        });   
+
+
+        // FUNCTIONS //////////////////////////////////////////////////////////////////////////////////////////////
+        function create_table(){
+          var table = '<table id="1" class="taccount">' +
+                    '<thead>' +
+                    '<tr>' +
+                    '<th colspan="4">T-Account</th>' +
+                    '<tr>' +
+                    '</thead>' +
+                    '<tr class="empty_row">' +
+                    '<td class="left acc_name"></td>' +
+                    '<td class="left acc_amnt"></td>' +
+                    '<td class="right acc_name"></td>' +
+                    '<td class="right acc_amnt"></td>' +
+                    '</tr>' +
+                    '<tr>' +                  
+                    '<tr class="tran_total">' +
+                    '<td class="left acc_name"></td>' +
+                    '<td class="left total"></td>' +
+                    '<td class="right acc_name"></td>' +
+                    '<td class="right total"></td>' +
+                    '</tr>' +
+                    '</table>';
+          $("#transactions").html(table);  
+          //Hide total line 
+          $(".tran_total").hide();                  
+        }
+
+        function total(){
+            //Left Total
+            var left = "'.left.acc_amnt'"
+            var amnt_array = $(".left.acc_amnt").map(function() {
+                      if(!$(this).text() == ""){
+                     return parseInt($(this).text(), 10);
+                      }
+                  }).get();
+
+            var total = 0;
+            for (var i = 0; i < amnt_array.length; i++) {
+                total += amnt_array[i] ;
+            }
+            db_total = total;  
+
+          //Right Total
+           var amnt_array = $(".right.acc_amnt").map(function() {
+                      if(!$(this).text() == ""){
+                     return parseInt($(this).text(), 10);
+                      }
+                  }).get();
+
+            total = 0;
+            for (var i = 0; i < amnt_array.length; i++) {
+                total += amnt_array[i] ;
+            }
+            cr_total = total;
+        }
+
+        function close_account(){
+          //Calculating Brought Down amount
+          var bd_amnt = 0;
+          var cf_amnt = 0;
+          var res = 0;
+
+          if(db_total > cr_total){
+            bd_amnt = db_total - cr_total;
+          } else {
+            bd_amnt = cr_total - db_total;
+          }
+            console.log("Carried Forward: " + cf_amnt);
+
+            res = db_total - cr_total;
+            if (res > 0)
+            {
+                       res = Math.abs(res);
+              bd_amnt = res;
+              cf_amnt = res;
+             bd_row = '<tr class="bd_line">' +
+                        '<td class="left acc_name"></td>' +
+                        '<td class="left acc_amnt"></td>' +
+                        '<td class="right acc_name">Brought Down</td>' +
+                        '<td class="right acc_amnt">' + bd_amnt + '</td>' +
+                        '</tr>';   
+
+             cf_row = '<tr class="cf_line">' +
+                        '<td class="left acc_name">Carried Forward</td>' +
+                        '<td class="left acc_amnt">' + cf_amnt + '</td>' +
+                        '<td class="right acc_name"></td>' +
+                        '<td class="right acc_amnt"></td>' +
+                        '</tr>';
+
+                      } else {            
+
+                        res = Math.abs(res);
+                        bd_amnt = res;
+                        cf_amnt = res;
+                        bd_row = '<tr class="bd_line">' +
+                                  '<td class="left acc_name">Brought Down</td>' +
+                                  '<td class="left acc_amnt">' + bd_amnt + '</td>' +
+                                  '<td class="right acc_name"></td>' +
+                                  '<td class="right acc_amnt"></td>' +
+                                  '</tr>';
+
+                        cf_row = '<tr class="cf_line">' +
+                                  '<td class="left acc_name"></td>' +
+                                  '<td class="left acc_amnt"></td>' +
+                                  '<td class="right acc_name">Carried Forward</td>' +
+                                  '<td class="right acc_amnt">' + cf_amnt + '</td>' +
+                                  '</tr>';                        
+                      }            
+        }
+
+  });
+</script>
+
+<style type="text/css">
+html,body {
+    height:100%;
+    margin-top: 10px;
+    margin-left: 10px;
+}
+
+#container{
+  padding: 20px;
+  width: 1000px;
+  border: 1px solid black;
+  overflow: hidden; /* will contain if #first is longer than #second */ 
+}
+
+#transactions{
+  float: left;
+  width: 650px;
+/*border: 1px solid red;*/
+} 
+
+#tran_desc{ 
+  height: 300px;
+  border: 1px solid black;
+  margin: 0 0 0 670px; /* = #transactions width + 20*/
+  padding: 10px;
+  overflow: hidden; /*if you don't want #second to wrap below #first */
+}
+
+/*Form Table*/
+form#input{
+  padding-bottom:30px;
+}
+
+table#form_table input{
+  width: 150px;
+}
+
+/*T Account Table CSS*/
+table.taccount{
+  border-collapse:collapse;
+  margin-bottom: 30px;
+  width:650px;
+}
+
+table.taccount thead{
+  border-bottom: 1px solid black;
+  text-align:center;
+}
+
+td.left.acc_amnt{
+  border-right: 1px solid black;
+  padding-right:10px;
+}
+
+td.right.acc_name{
+  border-left: 1px solid black;
+  padding-left:10px;
+}
+
+td.acc_name{
+  width:40%;
+}
+
+td.acc_amnt{
+  width:10%;
+  text-align:right;
+}
+
+td.right.total{
+  text-align:right;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+}
+
+td.left.total{
+  padding-right:10px;
+  text-align:right;  
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;  
+}
+
+tr.empty_row{
+  /*border-bottom: 1em solid white;*/ /* use the background colour of a cell here */
+  height:1em;
+}
+</style>
+
+</head>
+<body>
+
+    <form id="input" action="">
+    <table id ="form_table">
+      <tr>
+        <td><label for="leftacc">Debit Account:</label></td>
+        <td><label for="leftamnt">Amount:</label></td>
+        <td><label for="rightacc">Credit Account:</label></td>
+        <td><label for="rightamnt">Amount:</label></td>
+      </tr>
+      <tr>
+        <td><input type="text" id="leftacc"></td>
+        <td><input type="text" id="leftamnt"></td>
+        <td><input type="text" id="rightacc"></td>
+        <td><input type="text" id="rightamnt"></td>
+      </tr>
+    </table>
+    <input type="button" id="btnmantran" value="Insert Manual Transaction">
+    <input type="button" id="btnaddtran" value="Add Random Transaction">    
+    <input type="button" id="btnsequence" value="Sequence">  
+    <input type="button" id="btnreset" value="Reset"> 
+
+    </form>
+
+    <div id="container">
+      <div id="transactions">
+      </div>
+      <div id="tran_desc">
+    </div>
+  </div>
+
+</body>
+</html>
