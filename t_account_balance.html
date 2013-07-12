@@ -11,6 +11,7 @@
 
 <script type="text/javascript">
   $(document).ready(function() {
+
         var db_total = 0;
         var cr_total = 0;
         var bd_row;
@@ -56,8 +57,6 @@
           test_result = test_result + "0";
           }
 
-
-
           if(test_result == "1100" || test_result == "0011"){
               if(!in_sequence){
 
@@ -89,27 +88,59 @@
         });
 
       $("#btnaddtran").click(function() {
-        var pick_side = Math.floor(Math.random() * 10)
+        var pick_side = Math.floor(Math.random() * 10);
 
         if(!in_sequence){
              //Pick left or right side randomnly and then insert a transaction
-              if(pick_side%2){
-                  var row = '<tr class="tran_line">' +
-                            '<td class="left acc_name"></td>' +
-                            '<td class="left acc_amnt"></td>' +
-                            '<td class="right acc_name">Account Name</td>' +
-                            '<td class="right acc_amnt">' + Math.floor(Math.random() * 6000) + '</td>' +
-                            '</tr>'
-              } else {
-                  var row = '<tr class="tran_line">' +
-                            '<td class="left acc_name">Account Name</td>' +
-                            '<td class="left acc_amnt">' + Math.floor(Math.random() * 6000) + '</td>' +
-                            '<td class="right acc_name"></td>' +
-                            '<td class="right acc_amnt"></td>' +
-                            '</tr>'          
-              }
+
+             if(!$(".tran_line").length){
+
+                    if(pick_side%2){
+                        var row = '<tr class="tran_line">' +
+                                  '<td class="left acc_name"></td>' +
+                                  '<td class="left acc_amnt"></td>' +
+                                  '<td class="right acc_name">Account Name</td>' +
+                                  '<td class="right acc_amnt">' + Math.floor(Math.random() * 6000) + '</td>' +
+                                  '</tr>'
+
+                    } else {
+
+                        var row = '<tr class="tran_line">' +
+                                  '<td class="left acc_name">Account Name</td>' +
+                                  '<td class="left acc_amnt">' + Math.floor(Math.random() * 6000) + '</td>' +
+                                  '<td class="right acc_name"></td>' +
+                                  '<td class="right acc_amnt"></td>' +
+                                  '</tr>'          
+                      }
+
+                  } else {
+
+                        if(pick_side%2){
+                        $('.tran_line').children('td.right.acc_name:empty:first').text('Account Name');
+                        $('.tran_line').children('td.right.acc_amnt:empty:first').text(Math.floor(Math.random() * 6000));                          
+                        row = '<tr class="tran_line">' +
+                                      '<td class="left acc_name"></td>' +
+                                      '<td class="left acc_amnt"></td>' +
+                                      '<td class="right acc_name"></td>' +
+                                      '<td class="right acc_amnt"></td>' +
+                                      '</tr>' 
+                        } else {       
+
+                          $('.tran_line').children('td.left.acc_name:empty:first').text('Account Name');
+                          $('.tran_line').children('td.left.acc_amnt:empty:first').text(Math.floor(Math.random() * 6000));
+
+                        row = '<tr class="tran_line">' +
+                                      '<td class="left acc_name"></td>' +
+                                      '<td class="left acc_amnt"></td>' +
+                                      '<td class="right acc_name"></td>' +
+                                      '<td class="right acc_amnt"></td>' +
+                                      '</tr>'                                       
+                        }                   
+                  }
               $(".empty_row").before(row);
+
           } else {
+
             alert("Sequence must finish before adding any new transactions");
           }
 
@@ -160,8 +191,21 @@
               case(1): console.log(seq_cnt);
                         //Totalling both sides
                         in_sequence = 1;
+
+                            //Remove empty transaction lines - REVISIT
+                           $('.tran_line').each(function () {
+                                    if ($(this).text().trim() == "") {
+                                        $(this).remove();
+                                    };
+                            });
+/*
+                          $(".tran_line").each(function() {
+                              if ($(this).find('td:empty').length){
+                                $(this).remove();
+                              }; 
+                          });​
+*/
                         total();
-                        
                         //Show total line 
                         $(".tran_total").fadeIn(time);                         
                         
@@ -197,7 +241,6 @@
               case(3): console.log(seq_cnt);
                         //Rebalancing Totals
                         total();   
-           
                         $(".tran_total").fadeOut(time, function() {                                  
                             $(".right.total").text(db_total);
                             $(".left.total").text(cr_total);
@@ -364,6 +407,24 @@
                                   '<td class="right acc_amnt">' + cf_amnt + '</td>' +
                                   '</tr>';                        
                       }            
+        }
+
+        function rm_empty(){
+            // Grab every row in your table
+            $('.tran_line').each(function(){
+            if($(this).children('td:empty').length === $(this).children('td').length){
+            $(this).log();  
+            $(this).remove(); // or $(this).hide();
+               } else {
+                $(this).log();  
+               }
+        });
+
+$.fn.log = function() {
+  console.log.apply(console, this);
+  return this;
+};
+
         }
 
   });
