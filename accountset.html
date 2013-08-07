@@ -1,0 +1,333 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+
+<html lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<title></title>
+
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.1/jquery-ui.min.js"></script>
+<script type="text/javascript" src="obj_2.js"></script>
+
+<script type="text/javascript">
+// http://jqueryui.com/button/#checkbox - example reference
+
+  var books = new accountset.createBook();
+  console.log("books:"+books);  
+
+  $(document).ready(function() {
+
+
+///////////////Functions////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      function update_list(){
+      //If empty create, else append
+        $("#account_id").html("");        
+        console.log("update_function() called");
+        var length = books.account_obj_list.length;
+        for (var i = 0; i < length; i++) {
+            var line = "<option value=" + i + ">" + books.account_obj_list[i].name  + "</option>";
+            $("#account_id").append(line);    
+          }  
+        //Selects first option as default
+        //GIVES WARNING
+        $("#account_id option:first-child").attr("selected", "selected");
+
+      }
+
+
+///////////////Functions//////////////////////////////////////////////////////////////////////////////////////////////////////////    
+
+      //Dynamically create accounts/transactions
+      // Report types: BS, TPL
+      //               B,  T
+      // Categories  : Income,Expense, Asset, Liability, Capital
+      //               I,     E,       A,     L,         C
+//      books.create_account(new Array("Bank", "Sales", "Gas")); 
+
+      $("#btnload_accounts").click(function() {
+          books.reset_accounts();
+
+          books.create_account(new Array("Bank,B,A",
+                                         "Sales,T,I",
+                                         "Purchases,T,E",
+                                         "Rent,T,E",
+                                         "Gas,T,E",
+                                         "Cash,B,A",
+                                         "Vehicles,B,A"));
+
+          var lines = books.add_journal_entry("Bank,0,500");          
+          var lines = books.add_journal_entry("Vehicles,500,0");  
+          books.post();                   
+          var lines = books.add_journal_entry("Bank,0,200");          
+          var lines = books.add_journal_entry("Rent,200,0");  
+          books.post();                   
+          var lines = books.add_journal_entry("Bank,0,29");          
+          var lines = books.add_journal_entry("Gas,29,0");  
+          books.post();                   
+          var lines = books.add_journal_entry("Bank,300,0");          
+          var lines = books.add_journal_entry("Sales,0,300");          
+          books.post();           
+          var lines = books.add_journal_entry("Sales,0,150");          
+          var lines = books.add_journal_entry("Bank,150,0");          
+          books.post();   
+          var lines = books.add_journal_entry("Bank,0,45");          
+          var lines = books.add_journal_entry("Purchases,45,0");          
+          books.post();
+          update_list(); 
+        });
+
+     $("#btnreset").click(function() {
+          books.reset_accounts();
+          update_list();
+      });   
+  
+  
+
+      //Update drop down menus
+      update_list();
+
+      $("#btncreate_account_obj").click(function() {
+            var acc_name = $("#acc_name").val();
+            books.create_account(new Array(acc_name));
+            update_list();   
+            $("#acc_name").val("");       
+        });      
+
+
+      $("#btndelete_acc").click(function() {
+          //Update arrays
+          books.t_account_obj_list.pop();
+
+      		$("table:last").remove();
+          update_list();          
+        });      
+
+
+      $("#btnsequence").click(function() {
+          var account_id = $("#account_id").val()
+          books.t_account_obj_list[account_id].sequence();
+
+        });
+
+      $("#btnsequence_all").click(function() {
+          for(var i=0; i<books.t_account_obj_list.length;i++){
+          books.t_account_obj_list[i].sequence();            
+          }
+        });
+
+      $("#btnpopulate").click(function() {
+          var taccounts = books.create_taccounts();
+          $("#taccounts").append(taccounts); 
+          update_list();         
+          books.populate_t_accs();
+        });   
+
+
+      $("#btnshow_tran_trail").click(function() {
+          books.create_tran_trail();
+          books.populate_tran_trail();
+        });         
+
+
+      $("#btnshow_trial_balance").click(function() {
+          books.create_trial_balance();
+          books.populate_trial_balance();
+        });       
+
+      $("#btnshow_tpl_report").click(function() {
+            var table = books.create_tpl_report();
+            $("#tpl_report").append(table);
+            books.populate_tpl_report();            
+        });       
+
+      $("#btnshow_bs_report").click(function() {
+            var table = books.create_bs_report();
+            $("#bs_report").append(table);
+           books.populate_bs_report();            
+        });       
+
+      $("#btnlog_accounts").click(function() {
+        books.get_accounts_details();
+        });             
+
+//      var journal_table = books.create_journal();
+//      $("#journal_entry").append(journal_table);
+        books.create_journal();
+
+      update_list();      
+
+  
+  });
+
+</script>
+
+<script type="text/javascript">
+
+</script>
+
+<style type="text/css">
+html,body {
+    height:100%;
+    margin-top: 10px;
+    margin-left: 10px;
+}
+
+#container{
+  padding: 20px;
+  width: 1000px;
+  border: 1px solid black;
+  overflow: hidden; /* will contain if #first is longer than #second */ 
+}
+
+#transactions{
+  float: left;
+  width: 650px;
+/*border: 1px solid red;*/
+} 
+
+#tran_desc{ 
+  height: 300px;
+  border: 1px solid black;
+  margin: 0 0 0 670px; /* = #transactions width + 20*/
+  padding: 10px;
+  overflow: hidden; /*if you don't want #second to wrap below #first */
+}
+
+/*Form Table*/
+form#input{
+  padding-bottom:30px;
+}
+
+table#form_table input{
+  width: 150px;
+}
+
+/*T Account Table CSS*/
+table.taccount{
+  border-collapse:collapse;
+  margin-bottom: 30px;
+  width:650px;
+}
+
+table.taccount thead{
+  border-bottom: 1px solid black;
+  text-align:center;
+}
+
+td.left.acc_amnt{
+  border-right: 1px solid black;
+  padding-right:10px;
+}
+
+td.right.acc_name{
+  border-left: 1px solid black;
+  padding-left:10px;
+}
+
+td.acc_name{
+  width:40%;
+}
+
+td.acc_amnt{
+  width:10%;
+  text-align:right;
+}
+
+td.right.total{
+  text-align:right;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+}
+
+td.left.total{
+  padding-right:10px;
+  text-align:right;  
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;  
+}
+
+tr.empty_row{
+  /*border-bottom: 1em solid white;*/ /* use the background colour of a cell here */
+  height:1em;
+}
+
+table#tran_trail_table td:nth-child(2){
+  width:300px;
+}
+
+table#tran_trail_table td:nth-child(3){
+  text-align:right;  
+}
+
+table#tran_trail_table td:nth-child(4){
+ text-align:right;  
+}
+
+table#trial_balance_table td:nth-child(1){
+  width:200px;
+}
+
+table#trial_balance_table td:nth-child(2){
+  text-align:right;  
+}
+
+table#trial_balance_table td:nth-child(3){
+ text-align:right;  
+}
+
+table#trial_balance_table tr:last-child td:nth-last-child(2){
+ border-top: 1px solid black;
+}
+table#trial_balance_table tr:last-child td:nth-last-child(1){
+ border-top: 1px solid black;
+}
+
+
+
+</style>
+
+</head>
+<body>
+    <form id="input" action="">	
+      <p>
+      <input type="button" id="btnload_accounts" value="Load Accounts">    
+      <input type="button" id="btnreset" value="Reset"><br>          
+    	<input type="text" id="acc_name">
+    	<input type="button" id="btncreate_account_obj" value="Create Account">
+    	<input type="button" id="btndelete_acc" value="Delete Last Account">
+      <input type="button" id="btnpopulate" value="Populate T Accounts">               
+      <select id="account_id">
+      <!--No <option>s, so not being validated correctly, put one in and overwrite through JQuery/Javascript -->
+      </select>
+      <br>
+      <input type="button" id="btnsequence" value="Sequence">  
+      <input type="button" id="btnsequence_all" value="Sequence All">
+      <input type="button" id="btnshow_tran_trail" value="Show Transaction Trail">      
+      <input type="button" id="btnshow_trial_balance" value="Show Trial balance">
+      <input type="button" id="btnlog_accounts" value="Log Accounts">  
+      <input type="button" id="btnshow_tpl_report" value="Show TPL Report">  
+      <input type="button" id="btnshow_bs_report" value="Show BS Report">  
+      </p>
+    </form>
+    <div id="journal_entry">
+      <h3>Enter Transaction</h3>
+    </div>
+    <div id="taccounts">
+      <h3>T Accounts</h3>
+    </div>
+    <div id="transaction_trail">
+      <h3>Transaction Trail</h3>
+    </div>
+    <div id="trial_balance">
+      <h3>Trial Balance</h3>
+    </div>    
+    <div id="tpl_report">
+      <h3>TPL Report</h3>
+    </div>        
+    <div id="bs_report">
+      <h3>BS Report</h3>
+    </div>        
+</body>
+</html>
