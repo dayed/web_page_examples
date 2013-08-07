@@ -30,5 +30,23 @@ jquery-csv - https://code.google.com/p/jquery-csv/
 t_account_balance.html
 ----------------------
 
-Description pending
+Trial page to implement a first pass of basic mechanisms. This will be used in accountset.js 
+
+accountset.js
+-------------
+
+This is a library of functions to support bookkeeping tasks. It can be used to build bookkeeping applications.
+It provides the ability for:
+* Creating user defined Acounts
+* Entering transactions
+* Displaying a Transaction Trail
+* Displaying a Trial Balance
+* Displaying T Accounts
+* Displaying a Trading and Profit & Loss Report
+* Displaying a Balance Sheet
+
+accountset.html
+-------------
+
+This is an example page using the accountset.js library to provide a fully functional system, showing the background detail and logic of double entry bookkeeping. 
 
